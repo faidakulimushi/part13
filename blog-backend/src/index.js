@@ -1,9 +1,12 @@
 const express = require('express')
 const sequelize = require('./database')
+const blogsRouter = require('./blogs')
 
 const app = express()
 
 app.use(express.json())
+
+app.use('/api/blogs', blogsRouter)
 
 app.get('/', (request, response) => {
   response.send('Blog backend is running!')

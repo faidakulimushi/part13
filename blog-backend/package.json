@@ -1,20 +1,16 @@
 {
   "name": "blog-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Blog backend for Full Stack Open Part 13",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "dotenv": "^18.0.5",
-    "express": "^5.2.1",
-    "pg": "^8.23.1",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.7"
   }
 }
