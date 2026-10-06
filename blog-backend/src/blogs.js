@@ -1,53 +1,33 @@
 const express = require('express')
 const router = express.Router()
-const sequelize = require('./database')
-const { QueryTypes } = require('sequelize')
+const Blog = require('./models/blog')
+
+const blogFinder = async (request, response, next) => {
+  request.blog = await Blog.findByPk(request.params.id)
+
+  if (!request.blog) {
+    return response.status(404).end()
+  }
+
+  next()
+}
 
 router.get('/', async (request, response) => {
-  const blogs = await sequelize.query(
-    'SELECT * FROM blogs',
-    { type: QueryTypes.SELECT }
-  )
-
+  const blogs = await Blog.findAll()
   response.json(blogs)
 })
 
 router.post('/', async (request, response) => {
-  const { author, url, title, likes } = request.body
-
-  const result = await sequelize.query(
-    `INSERT INTO blogs (author, url, title, likes)
-     VALUES (:author, :url, :title, :likes)
-     RETURNING *`,
-    {
-      replacements: {
-        author,
-        url,
-        title,
-        likes: likes ?? 0
-      },
-      type: QueryTypes.INSERT
-    }
-  )
-
-  response.status(201).json(result[0][0])
+  const blog = await Blog.create(request.body)
+  response.status(201).json(blog)
 })
 
-router.delete('/:id', async (request, response) => {
-  const { id } = request.params
+router.get('/:id', blogFinder, async (request, response) => {
+  response.json(request.blog)
+})
 
-  const result = await sequelize.query(
-    'DELETE FROM blogs WHERE id = :id RETURNING *',
-    {
-      replacements: { id },
-      type: QueryTypes.SELECT
-    }
-  )
-
-  if (result.length === 0) {
-    return response.status(404).end()
-  }
-
+router.delete('/:id', blogFinder, async (request, response) => {
+  await Blog.destroy(request.params.id)
   response.status(204).end()
 })
 
