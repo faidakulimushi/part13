@@ -42,6 +42,21 @@ const Blog = {
     return result[0]
   },
 
+  async updateLikes(id, likes) {
+    const result = await sequelize.query(
+      `UPDATE blogs
+       SET likes = :likes
+       WHERE id = :id
+       RETURNING *`,
+      {
+        replacements: { id, likes },
+        type: QueryTypes.SELECT
+      }
+    )
+
+    return result[0]
+  },
+
   async destroy(id) {
     await sequelize.query(
       'DELETE FROM blogs WHERE id = :id',

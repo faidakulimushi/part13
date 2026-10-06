@@ -26,6 +26,15 @@ router.get('/:id', blogFinder, async (request, response) => {
   response.json(request.blog)
 })
 
+router.put('/:id', blogFinder, async (request, response) => {
+  const updatedBlog = await Blog.updateLikes(
+    request.params.id,
+    request.body.likes
+  )
+
+  response.json(updatedBlog)
+})
+
 router.delete('/:id', blogFinder, async (request, response) => {
   await Blog.destroy(request.params.id)
   response.status(204).end()
