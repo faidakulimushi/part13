@@ -12,6 +12,23 @@ app.get('/', (request, response) => {
   response.send('Blog backend is running!')
 })
 
+// Error handling middleware
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'SequelizeValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+
+  if (error.name === 'SequelizeDatabaseError') {
+    return response.status(400).json({ error: error.message })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
+
 const PORT = 3000
 
 const start = async () => {

@@ -19,8 +19,8 @@ const Blog = {
       {
         replacements: {
           author,
-          url,
-          title,
+          url: url ?? null,
+          title: title ?? null,
           likes: likes ?? 0
         },
         type: QueryTypes.SELECT
