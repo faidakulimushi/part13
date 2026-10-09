@@ -1,3 +1,4 @@
+
 const { Model, DataTypes } = require('sequelize')
 const sequelize = require('../database')
 
@@ -22,9 +23,15 @@ User.init(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: {
+        name: 'users_username_unique',
+        msg: 'username must be unique',
+      },
       validate: {
         notEmpty: true,
+        isEmail: {
+          msg: 'username must be a valid email address',
+        },
       },
     },
   },

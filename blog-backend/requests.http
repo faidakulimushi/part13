@@ -1,11 +1,11 @@
 
-### 1. Create a user
+### 1. Create a user with a valid email
 POST http://localhost:3000/api/users
 Content-Type: application/json
 
 {
   "name": "Faida",
-  "username": "faida",
+  "username": "faida@example.com",
   "password": "example123"
 }
 
@@ -15,10 +15,30 @@ GET http://localhost:3000/api/users
 ### 3. Get one user by ID
 GET http://localhost:3000/api/users/1
 
-### 4. Update a user's name using username
-PUT http://localhost:3000/api/users/faida
+### 4. Update a user's name using their email username
+PUT http://localhost:3000/api/users/faida@example.com
 Content-Type: application/json
 
 {
   "name": "Faida Kulimushi"
+}
+
+### 5. Test invalid email (should return 400)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "username": "not-an-email",
+  "password": "example123"
+}
+
+### 6. Test duplicate email (run after request 1 succeeds)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Another User",
+  "username": "faida@example.com",
+  "password": "example456"
 }

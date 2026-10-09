@@ -23,12 +23,19 @@ app.get('/', (request, response) => {
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'SequelizeValidationError') {
-    return response.status(400).json({ error: error.message })
+  if (
+    error.name === 'SequelizeValidationError' ||
+    error.name === 'SequelizeUniqueConstraintError'
+  ) {
+    return response.status(400).json({
+      error: error.errors.map((item) => item.message),
+    })
   }
 
   if (error.name === 'SequelizeDatabaseError') {
-    return response.status(400).json({ error: error.message })
+    return response.status(400).json({
+      error: error.message,
+    })
   }
 
   next(error)
@@ -43,8 +50,8 @@ const start = async () => {
     await sequelize.authenticate()
     console.log('Database connection successful')
 
-    await sequelize.sync()
-console.log('Database tables synchronized')
+    await sequelize.sync({ alter: true })
+    console.log('Database tables synchronized')
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)

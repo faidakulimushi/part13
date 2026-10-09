@@ -1,9 +1,9 @@
+
 const usersRouter = require('express').Router()
 const User = require('./models/user')
 
 // POST /api/users
-// Add a new user
-usersRouter.post('/', async (request, response) => {
+usersRouter.post('/', async (request, response, next) => {
   try {
     const { name, username } = request.body
 
@@ -14,23 +14,22 @@ usersRouter.post('/', async (request, response) => {
 
     response.status(201).json(user)
   } catch (error) {
-    response.status(400).json({
-      error: error.message,
-    })
+    next(error)
   }
 })
 
 // GET /api/users
-// List all users
-usersRouter.get('/', async (request, response) => {
-  const users = await User.findAll()
-
-  response.json(users)
+usersRouter.get('/', async (request, response, next) => {
+  try {
+    const users = await User.findAll()
+    response.json(users)
+  } catch (error) {
+    next(error)
+  }
 })
 
 // PUT /api/users/:username
-// Change a user's name
-usersRouter.put('/:username', async (request, response) => {
+usersRouter.put('/:username', async (request, response, next) => {
   try {
     const user = await User.findOne({
       where: {
@@ -45,29 +44,29 @@ usersRouter.put('/:username', async (request, response) => {
     }
 
     user.name = request.body.name
-
     await user.save()
 
     response.json(user)
   } catch (error) {
-    response.status(400).json({
-      error: error.message,
-    })
+    next(error)
   }
 })
 
 // GET /api/users/:id
-// Get one user by ID
-usersRouter.get('/:id', async (request, response) => {
-  const user = await User.findByPk(request.params.id)
+usersRouter.get('/:id', async (request, response, next) => {
+  try {
+    const user = await User.findByPk(request.params.id)
 
-  if (!user) {
-    return response.status(404).json({
-      error: 'User not found',
-    })
+    if (!user) {
+      return response.status(404).json({
+        error: 'User not found',
+      })
+    }
+
+    response.json(user)
+  } catch (error) {
+    next(error)
   }
-
-  response.json(user)
 })
 
 module.exports = usersRouter
