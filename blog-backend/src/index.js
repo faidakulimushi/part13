@@ -7,10 +7,12 @@ const express = require('express')
 const sequelize = require('./database')
 const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
+const loginRouter = require('./login')
 
 const app = express()
 
 app.use(express.json())
+app.use('/api/login', loginRouter)
 
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)

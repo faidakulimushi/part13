@@ -1,6 +1,8 @@
+
 const express = require('express')
 const router = express.Router()
 const Blog = require('./models/blog')
+const { userExtractor } = require('./middleware')
 
 const blogFinder = async (request, response, next) => {
   try {
@@ -16,6 +18,7 @@ const blogFinder = async (request, response, next) => {
   }
 }
 
+// GET /api/blogs
 router.get('/', async (request, response, next) => {
   try {
     const blogs = await Blog.findAll()
@@ -25,19 +28,27 @@ router.get('/', async (request, response, next) => {
   }
 })
 
-router.post('/', async (request, response, next) => {
+// POST /api/blogs
+// Only logged-in users can create blogs
+router.post('/', userExtractor, async (request, response, next) => {
   try {
-    const blog = await Blog.create(request.body)
+    const blog = await Blog.create({
+      ...request.body,
+      userId: request.user.id,
+    })
+
     response.status(201).json(blog)
   } catch (error) {
     next(error)
   }
 })
 
+// GET /api/blogs/:id
 router.get('/:id', blogFinder, async (request, response) => {
   response.json(request.blog)
 })
 
+// PUT /api/blogs/:id
 router.put('/:id', blogFinder, async (request, response, next) => {
   try {
     const updatedBlog = await Blog.updateLikes(
@@ -51,6 +62,7 @@ router.put('/:id', blogFinder, async (request, response, next) => {
   }
 })
 
+// DELETE /api/blogs/:id
 router.delete('/:id', blogFinder, async (request, response, next) => {
   try {
     await Blog.destroy(request.params.id)
