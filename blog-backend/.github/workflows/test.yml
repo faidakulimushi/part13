@@ -43,7 +43,9 @@ jobs:
 
       - name: Run database migrations
         working-directory: blog-backend
-        run: npx cross-env NODE_ENV=test sequelize-cli db:migrate
+        run: |
+          npx cross-env NODE_ENV=test sequelize-cli db:migrate
+          npx cross-env NODE_ENV=test sequelize-cli db:migrate:status
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
@@ -79,7 +81,12 @@ jobs:
       - name: Print application logs on failure
         if: failure()
         working-directory: blog-backend
-        run: cat app.log
+        run: |
+          if [ -f app.log ]; then
+            cat app.log
+          else
+            echo "Application log file was not created."
+          fi
 
       - name: Stop application
         if: always()
