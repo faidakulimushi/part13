@@ -7,14 +7,18 @@ const Blog = require('./models/blog')
 // POST /api/users
 usersRouter.post('/', async (request, response, next) => {
   try {
-    const { name, username } = request.body
+    const { name, username, password } = request.body
 
     const user = await User.create({
       name,
       username,
+      password,
     })
 
-    response.status(201).json(user)
+    const userData = user.toJSON()
+    delete userData.password
+
+    response.status(201).json(userData)
   } catch (error) {
     next(error)
   }
@@ -25,6 +29,7 @@ usersRouter.post('/', async (request, response, next) => {
 usersRouter.get('/', async (request, response, next) => {
   try {
     const users = await User.findAll({
+      attributes: { exclude: ['password'] },
       order: [['id', 'ASC']],
     })
 
@@ -35,9 +40,7 @@ usersRouter.get('/', async (request, response, next) => {
 
       return {
         ...userData,
-        blogs: blogs.filter(
-          (blog) => blog.userId === user.id
-        ),
+        blogs: blogs.filter((blog) => blog.userId === user.id),
       }
     })
 
@@ -65,7 +68,10 @@ usersRouter.put('/:username', async (request, response, next) => {
     user.name = request.body.name
     await user.save()
 
-    response.json(user)
+    const userData = user.toJSON()
+    delete userData.password
+
+    response.json(userData)
   } catch (error) {
     next(error)
   }
@@ -75,7 +81,9 @@ usersRouter.put('/:username', async (request, response, next) => {
 // Return one user with their blogs
 usersRouter.get('/:id', async (request, response, next) => {
   try {
-    const user = await User.findByPk(request.params.id)
+    const user = await User.findByPk(request.params.id, {
+      attributes: { exclude: ['password'] },
+    })
 
     if (!user) {
       return response.status(404).json({
@@ -88,9 +96,7 @@ usersRouter.get('/:id', async (request, response, next) => {
 
     const userWithBlogs = {
       ...userData,
-      blogs: blogs.filter(
-        (blog) => blog.userId === user.id
-      ),
+      blogs: blogs.filter((blog) => blog.userId === user.id),
     }
 
     response.json(userWithBlogs)

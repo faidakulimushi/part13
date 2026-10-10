@@ -13,19 +13,22 @@ const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
 const loginRouter = require('./login')
 const authorsRouter = require('./authors')
+const resetRouter = require('./reset')
 
 const app = express()
 
 app.use(express.json())
 
-// Routes
+// API routes
 app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/authors', authorsRouter)
+app.use('/api/reset', resetRouter)
 
+// Root endpoint: GET /
 app.get('/', (request, response) => {
-  response.send('Blog backend is running!')
+  response.status(200).send('Blog backend is running!')
 })
 
 // Error handling middleware
@@ -52,19 +55,19 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler)
 
-const PORT = 3000
+const PORT = process.env.TESTING === 'true' ? 3001 : 3000
 
 const start = async () => {
   try {
-    // Connect to PostgreSQL
+    // Connect to the selected PostgreSQL database
     await sequelize.authenticate()
     console.log('Database connection successful')
 
-    // Create or update the Sequelize User table
+    // Synchronize the users table
     await User.sync({ alter: true })
     console.log('User table synchronized')
 
-    // Create the blogs table and ownership columns
+    // Initialize the blogs table
     await Blog.initialize()
     console.log('Blog table initialized')
 

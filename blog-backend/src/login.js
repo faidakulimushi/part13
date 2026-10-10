@@ -11,8 +11,8 @@ loginRouter.post('/', async (request, response, next) => {
       where: { username },
     })
 
-    // For this exercise, all users use the password "secret"
-    const passwordCorrect = password === 'secret'
+    const passwordCorrect =
+      user && typeof password === 'string' && user.password === password
 
     if (!user || !passwordCorrect) {
       return response.status(401).json({
