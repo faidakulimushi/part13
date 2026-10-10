@@ -93,4 +93,21 @@ GET http://localhost:3000/api/blogs?search=REACT
 ### Return all blogs
 GET http://localhost:3000/api/blogs
 
+
+
+
+
+### Search by title or author
+GET http://localhost:3000/api/blogs?search=jami
+
+### Search by author
+GET http://localhost:3000/api/blogs?search=Faida
+
+### Search using uppercase
+GET http://localhost:3000/api/blogs?search=JAMI
+
+### Return all blogs
+GET http://localhost:3000/api/blogs
+
+
 ```

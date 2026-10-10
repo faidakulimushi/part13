@@ -42,7 +42,7 @@ const addUserToBlog = async (blog) => {
 }
 
 // GET /api/blogs
-// Return all blogs or search by title
+// Return all blogs or search by title and author
 router.get('/', async (request, response, next) => {
   try {
     const blogs = await Blog.findAll(request.query.search)
@@ -87,7 +87,7 @@ router.get('/:id', blogFinder, async (request, response, next) => {
 })
 
 // PUT /api/blogs/:id
-// Update blog likes
+// Update the number of likes
 router.put('/:id', blogFinder, async (request, response, next) => {
   try {
     const updatedBlog = await Blog.updateLikes(
