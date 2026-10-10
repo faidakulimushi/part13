@@ -1,9 +1,12 @@
 
 const express = require('express')
 const router = express.Router()
+
 const Blog = require('./models/blog')
+const User = require('./models/user')
 const { userExtractor } = require('./middleware')
 
+// Find a blog by ID
 const blogFinder = async (request, response, next) => {
   try {
     request.blog = await Blog.findByPk(request.params.id)
@@ -18,11 +21,36 @@ const blogFinder = async (request, response, next) => {
   }
 }
 
+// Add the user who created a blog
+const addUserToBlog = async (blog) => {
+  if (!blog.userId) {
+    return { ...blog, user: null }
+  }
+
+  const user = await User.findByPk(blog.userId)
+
+  return {
+    ...blog,
+    user: user
+      ? {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+        }
+      : null,
+  }
+}
+
 // GET /api/blogs
+// Return all blogs with the user who added each blog
 router.get('/', async (request, response, next) => {
   try {
     const blogs = await Blog.findAll()
-    response.json(blogs)
+    const blogsWithUsers = await Promise.all(
+      blogs.map((blog) => addUserToBlog(blog))
+    )
+
+    response.json(blogsWithUsers)
   } catch (error) {
     next(error)
   }
@@ -37,15 +65,23 @@ router.post('/', userExtractor, async (request, response, next) => {
       userId: request.user.id,
     })
 
-    response.status(201).json(blog)
+    const blogWithUser = await addUserToBlog(blog)
+
+    response.status(201).json(blogWithUser)
   } catch (error) {
     next(error)
   }
 })
 
 // GET /api/blogs/:id
-router.get('/:id', blogFinder, async (request, response) => {
-  response.json(request.blog)
+router.get('/:id', blogFinder, async (request, response, next) => {
+  try {
+    const blog = await addUserToBlog(request.blog)
+
+    response.json(blog)
+  } catch (error) {
+    next(error)
+  }
 })
 
 // PUT /api/blogs/:id
@@ -56,7 +92,13 @@ router.put('/:id', blogFinder, async (request, response, next) => {
       request.body.likes
     )
 
-    response.json(updatedBlog)
+    if (!updatedBlog) {
+      return response.status(404).end()
+    }
+
+    const blogWithUser = await addUserToBlog(updatedBlog)
+
+    response.json(blogWithUser)
   } catch (error) {
     next(error)
   }

@@ -1,6 +1,8 @@
 
 const usersRouter = require('express').Router()
+
 const User = require('./models/user')
+const Blog = require('./models/blog')
 
 // POST /api/users
 usersRouter.post('/', async (request, response, next) => {
@@ -19,10 +21,27 @@ usersRouter.post('/', async (request, response, next) => {
 })
 
 // GET /api/users
+// Return all users with the blogs they have added
 usersRouter.get('/', async (request, response, next) => {
   try {
-    const users = await User.findAll()
-    response.json(users)
+    const users = await User.findAll({
+      order: [['id', 'ASC']],
+    })
+
+    const blogs = await Blog.findAll()
+
+    const usersWithBlogs = users.map((user) => {
+      const userData = user.toJSON()
+
+      return {
+        ...userData,
+        blogs: blogs.filter(
+          (blog) => blog.userId === user.id
+        ),
+      }
+    })
+
+    response.json(usersWithBlogs)
   } catch (error) {
     next(error)
   }
@@ -53,6 +72,7 @@ usersRouter.put('/:username', async (request, response, next) => {
 })
 
 // GET /api/users/:id
+// Return one user with their blogs
 usersRouter.get('/:id', async (request, response, next) => {
   try {
     const user = await User.findByPk(request.params.id)
@@ -63,7 +83,17 @@ usersRouter.get('/:id', async (request, response, next) => {
       })
     }
 
-    response.json(user)
+    const blogs = await Blog.findAll()
+    const userData = user.toJSON()
+
+    const userWithBlogs = {
+      ...userData,
+      blogs: blogs.filter(
+        (blog) => blog.userId === user.id
+      ),
+    }
+
+    response.json(userWithBlogs)
   } catch (error) {
     next(error)
   }

@@ -5,6 +5,10 @@ require('dotenv').config({
 
 const express = require('express')
 const sequelize = require('./database')
+
+const Blog = require('./models/blog')
+const User = require('./models/user')
+
 const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
 const loginRouter = require('./login')
@@ -12,8 +16,9 @@ const loginRouter = require('./login')
 const app = express()
 
 app.use(express.json())
-app.use('/api/login', loginRouter)
 
+// Routes
+app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 
@@ -49,17 +54,24 @@ const PORT = 3000
 
 const start = async () => {
   try {
+    // Connect to PostgreSQL
     await sequelize.authenticate()
     console.log('Database connection successful')
 
-    await sequelize.sync({ alter: true })
-    console.log('Database tables synchronized')
+    // Create or update the Sequelize User table
+    await User.sync({ alter: true })
+    console.log('User table synchronized')
 
+    // Create the blogs table and ownership columns
+    await Blog.initialize()
+    console.log('Blog table initialized')
+
+    // Start the server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })
   } catch (error) {
-    console.error('Database connection failed:', error.message)
+    console.error('Server startup failed:', error)
     process.exit(1)
   }
 }
