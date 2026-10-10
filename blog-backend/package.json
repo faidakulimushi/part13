@@ -1,3 +1,4 @@
+
 {
   "name": "blog-backend",
   "version": "1.0.0",
@@ -6,7 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "cross-env TESTING=true node --test --test-concurrency=1 tests/api_ch3.test.js",
-    "start:test": "cross-env TESTING=true node src/index.js"
+    "start:test": "cross-env TESTING=true node src/index.js",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo"
   },
   "dependencies": {
     "axios": "^1.20.0",
@@ -18,6 +21,7 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0"
+    "cross-env": "^10.1.0",
+    "sequelize-cli": "^6.6.5"
   }
 }

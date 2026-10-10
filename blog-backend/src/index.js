@@ -6,8 +6,8 @@ require('dotenv').config({
 const express = require('express')
 const sequelize = require('./database')
 
-const Blog = require('./models/blog')
-const User = require('./models/user')
+require('./models/user')
+require('./models/blog')
 
 const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
@@ -26,7 +26,7 @@ app.use('/api/users', usersRouter)
 app.use('/api/authors', authorsRouter)
 app.use('/api/reset', resetRouter)
 
-// Root endpoint: GET /
+// Root endpoint
 app.get('/', (request, response) => {
   response.status(200).send('Blog backend is running!')
 })
@@ -59,19 +59,10 @@ const PORT = process.env.TESTING === 'true' ? 3001 : 3000
 
 const start = async () => {
   try {
-    // Connect to the selected PostgreSQL database
     await sequelize.authenticate()
     console.log('Database connection successful')
 
-    // Synchronize the users table
-    await User.sync({ alter: true })
-    console.log('User table synchronized')
-
-    // Initialize the blogs table
-    await Blog.initialize()
-    console.log('Blog table initialized')
-
-    // Start the server
+    // Tables are created and changed through migrations.
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })

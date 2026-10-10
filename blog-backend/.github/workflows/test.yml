@@ -41,6 +41,13 @@ jobs:
         working-directory: blog-backend
         run: npm ci
 
+      - name: Run database migrations
+        working-directory: blog-backend
+        run: npx cross-env NODE_ENV=test sequelize-cli db:migrate
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
       - name: Start application
         working-directory: blog-backend
         run: |
@@ -48,6 +55,7 @@ jobs:
           echo $! > app.pid
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           PORT: 3001
           SECRET: test_secret
 
@@ -80,4 +88,3 @@ jobs:
             kill "$(cat blog-backend/app.pid)" 2>/dev/null || true
           fi
           pkill -f '[n]ode src/index.js' || true
-EOF
