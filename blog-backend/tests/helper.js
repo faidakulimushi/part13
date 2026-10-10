@@ -1,9 +1,18 @@
+
 const axios = require('axios')
 
 const baseUrl = 'http://localhost:3001/api'
 
 const resetDatabase = async () => {
-  await axios.post(`${baseUrl}/reset`)
+  try {
+    await axios.post(`${baseUrl}/reset`)
+  } catch (error) {
+    console.error(
+      'Database reset failed:',
+      error.response?.data || error.message
+    )
+    throw error
+  }
 }
 
 const createUser = async (username, name, password) => {
@@ -44,8 +53,16 @@ const login = async (username, password) => {
 const resetAndSeed = async () => {
   await resetDatabase()
 
-  const user1 = await createUser('test1@example.com', 'Test User 1', 'password123')
-  const user2 = await createUser('test2@example.com', 'Test User 2', 'password456')
+  const user1 = await createUser(
+    'test1@example.com',
+    'Test User 1',
+    'password123'
+  )
+  const user2 = await createUser(
+    'test2@example.com',
+    'Test User 2',
+    'password456'
+  )
 
   const token1 = await login('test1@example.com', 'password123')
   const token2 = await login('test2@example.com', 'password456')
