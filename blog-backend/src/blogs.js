@@ -61,6 +61,19 @@ router.get('/', async (request, response, next) => {
 // Only logged-in users can create blogs
 router.post('/', userExtractor, async (request, response, next) => {
   try {
+    const { year } = request.body
+    const currentYear = new Date().getFullYear()
+
+    if (
+      !Number.isInteger(year) ||
+      year < 1991 ||
+      year > currentYear
+    ) {
+      return response.status(400).json({
+        error: `year must be an integer between 1991 and ${currentYear}`,
+      })
+    }
+
     const blog = await Blog.create({
       ...request.body,
       userId: request.user.id,
@@ -70,6 +83,12 @@ router.post('/', userExtractor, async (request, response, next) => {
 
     response.status(201).json(blogWithUser)
   } catch (error) {
+    if (error.message.startsWith('Year must be')) {
+      return response.status(400).json({
+        error: error.message,
+      })
+    }
+
     next(error)
   }
 })
