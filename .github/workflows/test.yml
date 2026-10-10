@@ -1,0 +1,83 @@
+cat > .github/workflows/test.yml <<'EOF'
+name: API Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: blog-backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: blog-backend
+        run: npm ci
+
+      - name: Start application
+        working-directory: blog-backend
+        run: |
+          npm run start:test > app.log 2>&1 &
+          echo $! > app.pid
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          PORT: 3001
+          SECRET: test_secret
+
+      - name: Wait for application
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/ >/dev/null; then
+              echo "Application is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Application did not start"
+          cat blog-backend/app.log
+          exit 1
+
+      - name: Run API tests
+        working-directory: blog-backend
+        run: npm test
+
+      - name: Print application logs on failure
+        if: failure()
+        working-directory: blog-backend
+        run: cat app.log
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f blog-backend/app.pid ]; then
+            kill "$(cat blog-backend/app.pid)" 2>/dev/null || true
+          fi
+          pkill -f '[n]ode src/index.js' || true
+EOF
