@@ -29,7 +29,7 @@ const Blog = {
       )
     `)
 
-    // Also support an existing blogs table missing these columns
+    // Support an existing blogs table missing these columns
     await sequelize.query(`
       ALTER TABLE blogs
       ADD COLUMN IF NOT EXISTS user_id INTEGER
@@ -49,13 +49,30 @@ const Blog = {
     `)
   },
 
-  async findAll() {
+  // Return all blogs, or search by title when a search term is provided
+  async findAll(search) {
+    if (search) {
+      return sequelize.query(
+        `SELECT ${blogColumns}
+         FROM blogs
+         WHERE title ILIKE :search
+         ORDER BY id`,
+        {
+          replacements: { search: `%${search}%` },
+          type: QueryTypes.SELECT,
+        }
+      )
+    }
+
     return sequelize.query(
-      `SELECT ${blogColumns} FROM blogs ORDER BY id`,
+      `SELECT ${blogColumns}
+       FROM blogs
+       ORDER BY id`,
       { type: QueryTypes.SELECT }
     )
   },
 
+  // Create a new blog
   async create(blog) {
     const { author, url, title, likes, userId } = blog
 
@@ -80,6 +97,7 @@ const Blog = {
     return result[0]
   },
 
+  // Find one blog by its ID
   async findByPk(id) {
     const result = await sequelize.query(
       `SELECT ${blogColumns}
@@ -94,6 +112,7 @@ const Blog = {
     return result[0]
   },
 
+  // Update the number of likes
   async updateLikes(id, likes) {
     const result = await sequelize.query(
       `UPDATE blogs
@@ -110,6 +129,7 @@ const Blog = {
     return result[0]
   },
 
+  // Delete a blog by its ID
   async destroy(id) {
     await sequelize.query(
       'DELETE FROM blogs WHERE id = :id',

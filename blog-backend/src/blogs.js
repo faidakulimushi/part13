@@ -42,10 +42,11 @@ const addUserToBlog = async (blog) => {
 }
 
 // GET /api/blogs
-// Return all blogs with the user who added each blog
+// Return all blogs or search by title
 router.get('/', async (request, response, next) => {
   try {
-    const blogs = await Blog.findAll()
+    const blogs = await Blog.findAll(request.query.search)
+
     const blogsWithUsers = await Promise.all(
       blogs.map((blog) => addUserToBlog(blog))
     )
@@ -74,6 +75,7 @@ router.post('/', userExtractor, async (request, response, next) => {
 })
 
 // GET /api/blogs/:id
+// Return one blog with its user
 router.get('/:id', blogFinder, async (request, response, next) => {
   try {
     const blog = await addUserToBlog(request.blog)
@@ -85,6 +87,7 @@ router.get('/:id', blogFinder, async (request, response, next) => {
 })
 
 // PUT /api/blogs/:id
+// Update blog likes
 router.put('/:id', blogFinder, async (request, response, next) => {
   try {
     const updatedBlog = await Blog.updateLikes(
@@ -106,19 +109,25 @@ router.put('/:id', blogFinder, async (request, response, next) => {
 
 // DELETE /api/blogs/:id
 // Only the user who created the blog can delete it
-router.delete('/:id', userExtractor, blogFinder, async (request, response, next) => {
-  try {
-    if (Number(request.blog.userId) !== Number(request.user.id)) {
-      return response.status(403).json({
-        error: 'only the user who added the blog can delete it',
-      })
-    }
+router.delete(
+  '/:id',
+  userExtractor,
+  blogFinder,
+  async (request, response, next) => {
+    try {
+      if (Number(request.blog.userId) !== Number(request.user.id)) {
+        return response.status(403).json({
+          error: 'only the user who added the blog can delete it',
+        })
+      }
 
-    await Blog.destroy(request.params.id)
-    response.status(204).end()
-  } catch (error) {
-    next(error)
+      await Blog.destroy(request.params.id)
+
+      response.status(204).end()
+    } catch (error) {
+      next(error)
+    }
   }
-})
+)
 
 module.exports = router

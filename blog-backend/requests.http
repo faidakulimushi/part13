@@ -81,4 +81,16 @@ GET {{baseUrl}}/api/blogs/1
 # Replace 2 with the ID of a test blog owned by the logged-in user.
 DELETE {{baseUrl}}/api/blogs/2
 Authorization: Bearer {{token}}
+
+
+
+### Search for React in blog titles
+GET http://localhost:3000/api/blogs?search=react
+
+### Search using uppercase letters
+GET http://localhost:3000/api/blogs?search=REACT
+
+### Return all blogs
+GET http://localhost:3000/api/blogs
+
 ```
