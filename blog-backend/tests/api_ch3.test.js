@@ -1,3 +1,4 @@
+
 const { describe, it, before } = require('node:test')
 const assert = require('node:assert')
 const axios = require('axios')
@@ -12,8 +13,12 @@ before(async () => {
 describe('Blogs API', () => {
   it('blogs are returned as json and initially empty', async () => {
     const response = await axios.get(`${baseUrl}/blogs`)
-    assert.ok([200, 201].includes(response.status))
-    assert.strictEqual(response.headers['content-type'], 'application/json; charset=utf-8')
+
+    assert.strictEqual(response.status, 200)
+    assert.strictEqual(
+      response.headers['content-type'],
+      'application/json; charset=utf-8'
+    )
     assert.strictEqual(Array.isArray(response.data), true)
     assert.strictEqual(response.data.length, 0)
   })
@@ -22,11 +27,14 @@ describe('Blogs API', () => {
     const newBlog = {
       title: 'Test Blog Post',
       author: 'Test Author',
-      url: 'https://example.com/test-blog'
+      url: 'https://example.com/test-blog',
+      year: 2024
     }
 
     const response = await axios.post(`${baseUrl}/blogs`, newBlog, {
-      headers: { Authorization: `Bearer ${testData.tokens[0]}` }
+      headers: {
+        Authorization: `Bearer ${testData.tokens[0]}`
+      }
     })
 
     assert.ok([200, 201].includes(response.status))
@@ -34,10 +42,78 @@ describe('Blogs API', () => {
     assert.strictEqual(response.data.author, newBlog.author)
     assert.strictEqual(response.data.url, newBlog.url)
     assert.strictEqual(response.data.likes, 0)
+    assert.strictEqual(response.data.year, newBlog.year)
+  })
+
+  it('rejects a blog with a year before 1991', async () => {
+    const newBlog = {
+      title: 'Old Blog',
+      author: 'Test Author',
+      url: 'https://example.com/old-blog',
+      year: 1990
+    }
+
+    await assert.rejects(
+      axios.post(`${baseUrl}/blogs`, newBlog, {
+        headers: {
+          Authorization: `Bearer ${testData.tokens[0]}`
+        }
+      }),
+      (error) => {
+        assert.strictEqual(error.response.status, 400)
+        assert.ok(error.response.data.error)
+        return true
+      }
+    )
+  })
+
+  it('rejects a blog with a year in the future', async () => {
+    const newBlog = {
+      title: 'Future Blog',
+      author: 'Test Author',
+      url: 'https://example.com/future-blog',
+      year: new Date().getFullYear() + 1
+    }
+
+    await assert.rejects(
+      axios.post(`${baseUrl}/blogs`, newBlog, {
+        headers: {
+          Authorization: `Bearer ${testData.tokens[0]}`
+        }
+      }),
+      (error) => {
+        assert.strictEqual(error.response.status, 400)
+        assert.ok(error.response.data.error)
+        return true
+      }
+    )
+  })
+
+  it('rejects a blog with a non-integer year', async () => {
+    const newBlog = {
+      title: 'Invalid Year Blog',
+      author: 'Test Author',
+      url: 'https://example.com/invalid-year',
+      year: 2000.5
+    }
+
+    await assert.rejects(
+      axios.post(`${baseUrl}/blogs`, newBlog, {
+        headers: {
+          Authorization: `Bearer ${testData.tokens[0]}`
+        }
+      }),
+      (error) => {
+        assert.strictEqual(error.response.status, 400)
+        assert.ok(error.response.data.error)
+        return true
+      }
+    )
   })
 
   it('created blog appears in blogs list', async () => {
     const response = await axios.get(`${baseUrl}/blogs`)
+
     assert.strictEqual(response.data.length, 1)
     assert.strictEqual(response.data[0].title, 'Test Blog Post')
   })
@@ -58,6 +134,7 @@ describe('Blogs API', () => {
 describe('Users API', () => {
   it('all users are returned', async () => {
     const response = await axios.get(`${baseUrl}/users`)
+
     assert.ok([200, 201].includes(response.status))
     assert.strictEqual(Array.isArray(response.data), true)
     assert.strictEqual(response.data.length, 2)
@@ -66,7 +143,7 @@ describe('Users API', () => {
   it('users have correct properties', async () => {
     const response = await axios.get(`${baseUrl}/users`)
     const user = response.data[0]
-    
+
     assert.ok(user.id)
     assert.ok(user.username)
     assert.ok(user.name)
@@ -77,15 +154,17 @@ describe('Users API', () => {
 describe('Authors API', () => {
   it('returns author statistics', async () => {
     const response = await axios.get(`${baseUrl}/authors`)
+
     assert.ok([200, 201].includes(response.status))
     assert.strictEqual(Array.isArray(response.data), true)
   })
 
   it('author stats have correct structure', async () => {
     const response = await axios.get(`${baseUrl}/authors`)
-    
+
     if (response.data.length > 0) {
       const author = response.data[0]
+
       assert.ok(author.author)
       assert.ok(!isNaN(Number(author.blogs)))
       assert.ok(!isNaN(Number(author.likes)))
