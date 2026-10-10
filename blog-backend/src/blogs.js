@@ -105,8 +105,15 @@ router.put('/:id', blogFinder, async (request, response, next) => {
 })
 
 // DELETE /api/blogs/:id
-router.delete('/:id', blogFinder, async (request, response, next) => {
+// Only the user who created the blog can delete it
+router.delete('/:id', userExtractor, blogFinder, async (request, response, next) => {
   try {
+    if (Number(request.blog.userId) !== Number(request.user.id)) {
+      return response.status(403).json({
+        error: 'only the user who added the blog can delete it',
+      })
+    }
+
     await Blog.destroy(request.params.id)
     response.status(204).end()
   } catch (error) {

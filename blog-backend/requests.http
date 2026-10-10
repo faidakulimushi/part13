@@ -2,6 +2,7 @@
 @baseUrl = http://localhost:3000
 
 ### 1. Create a user
+# Run this only if the user does not already exist.
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
@@ -14,10 +15,10 @@ Content-Type: application/json
 ### 2. List all users and their blogs
 GET {{baseUrl}}/api/users
 
-### 3. Get one user by ID, including their blogs
+### 3. Get one user by ID
 GET {{baseUrl}}/api/users/1
 
-### 4. Update a user's name using their email username
+### 4. Update a user's name
 PUT {{baseUrl}}/api/users/faida%40example.com
 Content-Type: application/json
 
@@ -52,26 +53,32 @@ Content-Type: application/json
 
 {
   "username": "faida@example.com",
-  "password": "example123"
+  "password": "secret"
 }
 
-### 8. Create a blog as a logged-in user
+### 8. Save the login token
 @token = {{login.response.body.token}}
 
+### 9. Create a blog as a logged-in user
 POST {{baseUrl}}/api/blogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "title": "Learning Full Stack Open",
+  "title": "Testing Exercise 11",
   "author": "Faida",
   "url": "https://fullstackopen.com/",
   "likes": 0
 }
 
-### 9. List all blogs with their users
+### 10. List all blogs with their users
 GET {{baseUrl}}/api/blogs
 
-### 10. Get one blog by ID
+### 11. Get one blog by ID
 GET {{baseUrl}}/api/blogs/1
+
+### 12. Delete a blog (only its owner can delete it)
+# Replace 2 with the ID of a test blog owned by the logged-in user.
+DELETE {{baseUrl}}/api/blogs/2
+Authorization: Bearer {{token}}
 ```
