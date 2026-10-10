@@ -110,4 +110,16 @@ GET http://localhost:3000/api/blogs?search=JAMI
 GET http://localhost:3000/api/blogs
 
 
+
+### Get all blogs ordered by likes
+GET http://localhost:3000/api/blogs
+
+### Search blogs, still ordered by likes
+GET http://localhost:3000/api/blogs?search=Faida
+
+
+### Exercise 16: Get author statistics
+GET http://localhost:3000/api/authors
+
+
 ```

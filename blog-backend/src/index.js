@@ -12,6 +12,7 @@ const User = require('./models/user')
 const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
 const loginRouter = require('./login')
+const authorsRouter = require('./authors')
 
 const app = express()
 
@@ -21,6 +22,7 @@ app.use(express.json())
 app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/authors', authorsRouter)
 
 app.get('/', (request, response) => {
   response.send('Blog backend is running!')
