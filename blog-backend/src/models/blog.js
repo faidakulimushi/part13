@@ -49,14 +49,15 @@ const Blog = {
     `)
   },
 
-  // Return all blogs, or search by title when a search term is provided
+  // Return blogs ordered by likes, with optional title/author search
   async findAll(search) {
     if (search) {
       return sequelize.query(
         `SELECT ${blogColumns}
          FROM blogs
          WHERE title ILIKE :search
-         ORDER BY id`,
+            OR author ILIKE :search
+         ORDER BY likes DESC, id ASC`,
         {
           replacements: { search: `%${search}%` },
           type: QueryTypes.SELECT,
@@ -67,7 +68,7 @@ const Blog = {
     return sequelize.query(
       `SELECT ${blogColumns}
        FROM blogs
-       ORDER BY id`,
+       ORDER BY likes DESC, id ASC`,
       { type: QueryTypes.SELECT }
     )
   },
@@ -97,7 +98,7 @@ const Blog = {
     return result[0]
   },
 
-  // Find one blog by its ID
+  // Find a blog by its ID
   async findByPk(id) {
     const result = await sequelize.query(
       `SELECT ${blogColumns}
