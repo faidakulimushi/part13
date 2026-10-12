@@ -12,8 +12,21 @@ const userExtractor = async (request, response, next) => {
       })
     }
 
-    const token = authorization.substring(7)
+    const token = authorization.substring(7).trim()
+
+    if (!token) {
+      return response.status(401).json({
+        error: 'token missing',
+      })
+    }
+
     const decodedToken = jwt.verify(token, process.env.SECRET)
+
+    if (!decodedToken.id) {
+      return response.status(401).json({
+        error: 'token invalid',
+      })
+    }
 
     const user = await User.findByPk(decodedToken.id)
 
@@ -28,7 +41,8 @@ const userExtractor = async (request, response, next) => {
   } catch (error) {
     if (
       error.name === 'JsonWebTokenError' ||
-      error.name === 'TokenExpiredError'
+      error.name === 'TokenExpiredError' ||
+      error.name === 'NotBeforeError'
     ) {
       return response.status(401).json({
         error: 'token invalid',

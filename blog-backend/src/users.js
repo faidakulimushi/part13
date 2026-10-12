@@ -7,6 +7,7 @@ const sequelize = require('./database')
 const { QueryTypes } = require('sequelize')
 
 // POST /api/users
+// Create a new user
 usersRouter.post('/', async (request, response, next) => {
   try {
     const { name, username, password } = request.body
@@ -53,6 +54,7 @@ usersRouter.get('/', async (request, response, next) => {
 })
 
 // PUT /api/users/:username
+// Update a user's name
 usersRouter.put('/:username', async (request, response, next) => {
   try {
     const user = await User.findOne({
@@ -100,7 +102,7 @@ usersRouter.get('/:id', async (request, response, next) => {
       (blog) => blog.userId === user.id
     )
 
-    // Get blogs saved in this user's reading list
+    // Get reading-list blogs and their reading-list row details
     const readings = await sequelize.query(
       `SELECT
          b.id,
@@ -108,7 +110,9 @@ usersRouter.get('/:id', async (request, response, next) => {
          b.title,
          b.author,
          b.likes,
-         b.year
+         b.year,
+         rl.id AS reading_list_id,
+         rl.read AS reading_list_read
        FROM blogs b
        JOIN reading_lists rl ON rl.blog_id = b.id
        WHERE rl.user_id = :userId
@@ -119,12 +123,26 @@ usersRouter.get('/:id', async (request, response, next) => {
       }
     )
 
+    // Include read status and reading-list row ID
+    const readingsWithReadingList = readings.map((blog) => ({
+      id: blog.id,
+      url: blog.url,
+      title: blog.title,
+      author: blog.author,
+      likes: blog.likes,
+      year: blog.year,
+      reading_list: {
+        read: blog.reading_list_read,
+        id: blog.reading_list_id,
+      },
+    }))
+
     const userData = user.toJSON()
 
     response.json({
       ...userData,
       blogs: userBlogs,
-      readings,
+      readings: readingsWithReadingList,
     })
   } catch (error) {
     next(error)
