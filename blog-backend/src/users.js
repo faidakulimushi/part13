@@ -82,7 +82,7 @@ usersRouter.put('/:username', async (request, response, next) => {
 })
 
 // GET /api/users/:id
-// Return one user with their blogs and reading list
+// Return one user with their blogs and filtered reading list
 usersRouter.get('/:id', async (request, response, next) => {
   try {
     const user = await User.findByPk(request.params.id, {
@@ -102,28 +102,43 @@ usersRouter.get('/:id', async (request, response, next) => {
       (blog) => blog.userId === user.id
     )
 
-    // Get reading-list blogs and their reading-list row details
-    const readings = await sequelize.query(
-      `SELECT
-         b.id,
-         b.url,
-         b.title,
-         b.author,
-         b.likes,
-         b.year,
-         rl.id AS reading_list_id,
-         rl.read AS reading_list_read
-       FROM blogs b
-       JOIN reading_lists rl ON rl.blog_id = b.id
-       WHERE rl.user_id = :userId
-       ORDER BY rl.id ASC`,
-      {
-        replacements: { userId: user.id },
-        type: QueryTypes.SELECT,
-      }
-    )
+    // Read the optional query parameter
+    const read = request.query.read
 
-    // Include read status and reading-list row ID
+    // Build the reading-list query
+    let readingListQuery = `
+      SELECT
+        b.id,
+        b.url,
+        b.title,
+        b.author,
+        b.likes,
+        b.year,
+        rl.id AS reading_list_id,
+        rl.read AS reading_list_read
+      FROM blogs b
+      JOIN reading_lists rl ON rl.blog_id = b.id
+      WHERE rl.user_id = :userId
+    `
+
+    const replacements = {
+      userId: user.id,
+    }
+
+    // Filter by read status when requested
+    if (read === 'true' || read === 'false') {
+      readingListQuery += ' AND rl.read = :read'
+      replacements.read = read === 'true'
+    }
+
+    readingListQuery += ' ORDER BY rl.id ASC'
+
+    const readings = await sequelize.query(readingListQuery, {
+      replacements,
+      type: QueryTypes.SELECT,
+    })
+
+    // Include reading-list information for each blog
     const readingsWithReadingList = readings.map((blog) => ({
       id: blog.id,
       url: blog.url,
