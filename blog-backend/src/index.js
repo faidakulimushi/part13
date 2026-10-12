@@ -14,6 +14,7 @@ const usersRouter = require('./users')
 const loginRouter = require('./login')
 const authorsRouter = require('./authors')
 const resetRouter = require('./reset')
+const readinglistsRouter = require('./readinglists')
 
 const app = express()
 
@@ -25,6 +26,7 @@ app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/authors', authorsRouter)
 app.use('/api/reset', resetRouter)
+app.use('/api/readinglists', readinglistsRouter)
 
 // Root endpoint
 app.get('/', (request, response) => {

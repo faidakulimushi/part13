@@ -3,6 +3,8 @@ const usersRouter = require('express').Router()
 
 const User = require('./models/user')
 const Blog = require('./models/blog')
+const sequelize = require('./database')
+const { QueryTypes } = require('sequelize')
 
 // POST /api/users
 usersRouter.post('/', async (request, response, next) => {
@@ -25,7 +27,7 @@ usersRouter.post('/', async (request, response, next) => {
 })
 
 // GET /api/users
-// Return all users with the blogs they have added
+// Return all users with their blogs
 usersRouter.get('/', async (request, response, next) => {
   try {
     const users = await User.findAll({
@@ -78,7 +80,7 @@ usersRouter.put('/:username', async (request, response, next) => {
 })
 
 // GET /api/users/:id
-// Return one user with their blogs
+// Return one user with their blogs and reading list
 usersRouter.get('/:id', async (request, response, next) => {
   try {
     const user = await User.findByPk(request.params.id, {
@@ -91,15 +93,39 @@ usersRouter.get('/:id', async (request, response, next) => {
       })
     }
 
+    // Get blogs added by this user
     const blogs = await Blog.findAll()
+
+    const userBlogs = blogs.filter(
+      (blog) => blog.userId === user.id
+    )
+
+    // Get blogs saved in this user's reading list
+    const readings = await sequelize.query(
+      `SELECT
+         b.id,
+         b.url,
+         b.title,
+         b.author,
+         b.likes,
+         b.year
+       FROM blogs b
+       JOIN reading_lists rl ON rl.blog_id = b.id
+       WHERE rl.user_id = :userId
+       ORDER BY rl.id ASC`,
+      {
+        replacements: { userId: user.id },
+        type: QueryTypes.SELECT,
+      }
+    )
+
     const userData = user.toJSON()
 
-    const userWithBlogs = {
+    response.json({
       ...userData,
-      blogs: blogs.filter((blog) => blog.userId === user.id),
-    }
-
-    response.json(userWithBlogs)
+      blogs: userBlogs,
+      readings,
+    })
   } catch (error) {
     next(error)
   }
