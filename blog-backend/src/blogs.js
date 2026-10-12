@@ -23,14 +23,16 @@ const blogFinder = async (request, response, next) => {
 
 // Add the user who created a blog
 const addUserToBlog = async (blog) => {
-  if (!blog.userId) {
-    return { ...blog, user: null }
+  const blogData = blog.toJSON ? blog.toJSON() : blog
+
+  if (!blogData.userId) {
+    return { ...blogData, user: null }
   }
 
-  const user = await User.findByPk(blog.userId)
+  const user = await User.findByPk(blogData.userId)
 
   return {
-    ...blog,
+    ...blogData,
     user: user
       ? {
           id: user.id,
@@ -42,8 +44,8 @@ const addUserToBlog = async (blog) => {
 }
 
 // GET /api/blogs
-// Return all blogs or search by title and author
-router.get('/', async (request, response, next) => {
+// Only users with an active session can view blogs
+router.get('/', userExtractor, async (request, response, next) => {
   try {
     const blogs = await Blog.findAll(request.query.search)
 
@@ -64,11 +66,7 @@ router.post('/', userExtractor, async (request, response, next) => {
     const { year } = request.body
     const currentYear = new Date().getFullYear()
 
-    if (
-      !Number.isInteger(year) ||
-      year < 1991 ||
-      year > currentYear
-    ) {
+    if (!Number.isInteger(year) || year < 1991 || year > currentYear) {
       return response.status(400).json({
         error: `year must be an integer between 1991 and ${currentYear}`,
       })
@@ -94,40 +92,50 @@ router.post('/', userExtractor, async (request, response, next) => {
 })
 
 // GET /api/blogs/:id
-// Return one blog with its user
-router.get('/:id', blogFinder, async (request, response, next) => {
-  try {
-    const blog = await addUserToBlog(request.blog)
+// Only users with an active session can view one blog
+router.get(
+  '/:id',
+  userExtractor,
+  blogFinder,
+  async (request, response, next) => {
+    try {
+      const blog = await addUserToBlog(request.blog)
 
-    response.json(blog)
-  } catch (error) {
-    next(error)
+      response.json(blog)
+    } catch (error) {
+      next(error)
+    }
   }
-})
+)
 
 // PUT /api/blogs/:id
-// Update the number of likes
-router.put('/:id', blogFinder, async (request, response, next) => {
-  try {
-    const updatedBlog = await Blog.updateLikes(
-      request.params.id,
-      request.body.likes
-    )
+// Only users with an active session can update likes
+router.put(
+  '/:id',
+  userExtractor,
+  blogFinder,
+  async (request, response, next) => {
+    try {
+      const updatedBlog = await Blog.updateLikes(
+        request.params.id,
+        request.body.likes
+      )
 
-    if (!updatedBlog) {
-      return response.status(404).end()
+      if (!updatedBlog) {
+        return response.status(404).end()
+      }
+
+      const blogWithUser = await addUserToBlog(updatedBlog)
+
+      response.json(blogWithUser)
+    } catch (error) {
+      next(error)
     }
-
-    const blogWithUser = await addUserToBlog(updatedBlog)
-
-    response.json(blogWithUser)
-  } catch (error) {
-    next(error)
   }
-})
+)
 
 // DELETE /api/blogs/:id
-// Only the user who created the blog can delete it
+// Only the user who created a blog can delete it
 router.delete(
   '/:id',
   userExtractor,

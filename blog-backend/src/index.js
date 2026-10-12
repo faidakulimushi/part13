@@ -6,12 +6,18 @@ require('dotenv').config({
 const express = require('express')
 const sequelize = require('./database')
 
-require('./models/user')
+const User = require('./models/user')
 require('./models/blog')
+const Session = require('./models/session')
+
+// Connect sessions to users
+Session.belongsTo(User, { foreignKey: 'userId' })
+User.hasMany(Session, { foreignKey: 'userId' })
 
 const blogsRouter = require('./blogs')
 const usersRouter = require('./users')
 const loginRouter = require('./login')
+const logoutRouter = require('./logout')
 const authorsRouter = require('./authors')
 const resetRouter = require('./reset')
 const readinglistsRouter = require('./readinglists')
@@ -22,6 +28,7 @@ app.use(express.json())
 
 // API routes
 app.use('/api/login', loginRouter)
+app.use('/api/logout', logoutRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/authors', authorsRouter)

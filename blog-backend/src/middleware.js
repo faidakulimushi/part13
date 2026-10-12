@@ -1,6 +1,7 @@
 
 const jwt = require('jsonwebtoken')
 const User = require('./models/user')
+const Session = require('./models/session')
 
 const userExtractor = async (request, response, next) => {
   try {
@@ -28,11 +29,32 @@ const userExtractor = async (request, response, next) => {
       })
     }
 
+    // Check that this token still has an active database session
+    const session = await Session.findOne({
+      where: {
+        token,
+        userId: decodedToken.id,
+      },
+    })
+
+    if (!session) {
+      return response.status(401).json({
+        error: 'session expired or logged out',
+      })
+    }
+
     const user = await User.findByPk(decodedToken.id)
 
     if (!user) {
       return response.status(401).json({
         error: 'user not found',
+      })
+    }
+
+    // Disabled users cannot access protected routes
+    if (user.disabled) {
+      return response.status(403).json({
+        error: 'account is disabled',
       })
     }
 
