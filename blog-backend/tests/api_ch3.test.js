@@ -12,7 +12,11 @@ before(async () => {
 
 describe('Blogs API', () => {
   it('blogs are returned as json and initially empty', async () => {
-    const response = await axios.get(`${baseUrl}/blogs`)
+    const response = await axios.get(`${baseUrl}/blogs`, {
+      headers: {
+        Authorization: `Bearer ${testData.tokens[0]}`
+      }
+    })
 
     assert.strictEqual(response.status, 200)
     assert.strictEqual(
@@ -112,19 +116,34 @@ describe('Blogs API', () => {
   })
 
   it('created blog appears in blogs list', async () => {
-    const response = await axios.get(`${baseUrl}/blogs`)
+    const response = await axios.get(`${baseUrl}/blogs`, {
+      headers: {
+        Authorization: `Bearer ${testData.tokens[0]}`
+      }
+    })
 
     assert.strictEqual(response.data.length, 1)
     assert.strictEqual(response.data[0].title, 'Test Blog Post')
   })
 
   it('blog can be updated', async () => {
-    const blogsResponse = await axios.get(`${baseUrl}/blogs`)
+    const blogsResponse = await axios.get(`${baseUrl}/blogs`, {
+      headers: {
+        Authorization: `Bearer ${testData.tokens[0]}`
+      }
+    })
+
     const blogId = blogsResponse.data[0].id
 
-    const response = await axios.put(`${baseUrl}/blogs/${blogId}`, {
-      likes: 5
-    })
+    const response = await axios.put(
+      `${baseUrl}/blogs/${blogId}`,
+      { likes: 5 },
+      {
+        headers: {
+          Authorization: `Bearer ${testData.tokens[0]}`
+        }
+      }
+    )
 
     assert.ok([200, 201].includes(response.status))
     assert.strictEqual(response.data.likes, 5)
